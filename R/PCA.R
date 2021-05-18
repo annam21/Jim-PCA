@@ -3,15 +3,31 @@
 # 4/19/21
 
 # Recreate PCA in R
-
-library(tidyverse)
 library(ggbiplot) # For plotting
+library(tidyverse) # Run this last 
+
+# QAQC - see if means and reps align
+# mns <- read_csv("data/01 Data PCA herb comp values trans fires - means only.csv")%>% 
+  # filter_all(any_vars(!is.na(.)))
+veg <- read_csv("data/02 Data PCA herb comp values trans fires - reps only.csv") %>%
+  select(-X12) %>%
+  filter_all(any_vars(!is.na(.))) %>%
+  rename(year = Year,
+         treatment = Treat) 
+#   
+# tst <- veg %>% 
+#   group_by(year, treatment) %>% 
+#   summarise(across(c3a:bare, mean)) %>%
+#   ungroup %>% 
+#   select(-year,-treatment)
+# mns2 <- mns %>% 
+#   select(-Year, - Trt)
+# tst < mns2 + 0.1  & tst > mns2 - 0.1
 
 # Data
-veg <- read_csv("data/Data PCA herb comp values trans fires.csv")
 vegm <- veg %>% 
   group_by(treatment, year) %>% 
-  summarize_at(vars(c3a:bare), mean) %>% 
+  summarise(across(c3a:bare, mean)) %>% 
   as.data.frame
 rownames(vegm) <- paste(vegm$treatment, vegm$year)
 # vegm <- vegm %>% 
@@ -33,7 +49,12 @@ ggbiplot(vegm_pca, labels = rownames(vegm))
 ggbiplot(vegm_pca,
          ellipse = TRUE,
          labels = rownames(vegm),
-         groups = vegm$treatment) 
+         groups = vegm$treatment) +
+  theme_classic() + 
+  labs(x = "PC1", 
+       y = "PC2",
+       color = "Treatment") 
+ggsave("results/pca_means_pretty.png")
 
 # Can also check out different PCA axes
 ggbiplot(vegm_pca,
@@ -55,8 +76,13 @@ ggbiplot(vegd_pca, labels = rownames(vegd))
 ggbiplot(vegd_pca,
          ellipse = TRUE,
          # labels = rownames(vegd),
-         groups = vegd$treatment)
+         groups = vegd$treatment) +
          # groups = vegd$year)
+  theme_classic() + 
+  labs(x = "PC1", 
+       y = "PC2",
+       color = "Treatment")
+ggsave("results/pca_all replicates_pretty.png")
 
 # Alternatively 2... Do a PCA for each year 
 pca_98 <- prcomp(
@@ -162,7 +188,7 @@ ggplot(raw, aes(x = PC1, y = PC2, color = treatment, label = year)) +
   theme_classic() +
   scale_color_manual(values = c( "red", "limegreen","cyan", "black")) 
   
-  
+
 
 
 # Other notes: 
